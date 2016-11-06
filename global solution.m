@@ -1,10 +1,13 @@
-%variables ??? unidades?????
+%variables
 
 %Interval set (24 intervalos)
 N = 24;
 
 %EV's set (200 carros)
 M = 200;
+% others sets ???? 
+M_V2G = 200;
+M_CHG = 200;
 
 %Electricity price model parameters (obtidos na seccao simulation settings)
 k0 = 10^-4; % unidades: C$/kWh
@@ -27,10 +30,9 @@ fe_ratio = 0.9;
 
 cvx_begin quiet
 
-
 %tenho algumas duvidas nesta parte das variaveis, usamos z ou x, e a matriz
 %F? o que fazemos com ela??
-variable z(N);
+variables x(M,N) f(M,N) ;
 
 %Charging load at interval i?????? isto ? necessario??? s?o a variaveis y
 %(x e f) de qual o z vai depender
@@ -49,14 +51,22 @@ for i = 1:N
 end;
 
 %Cost function
-f = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
+f_cost = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
 for i = 2:N
-    f = f + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
+    f_cost = f_cost + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
 end;
 
-minimize(f);
+minimize(f_cost);
 
 %subject to
+
+%Constrain that secures that the values of the matrix F(M,N)
+%are 1 or 0 INACABADO
+for i = 1:N
+    for m = 1:M
+       %%%% f(m,i) = 0 | 1; boolean ACABAR
+    end;
+end;    
 
 %Constrain that secures that the total load in an interval
 %is equal to the base load in that interval plus the sum of
