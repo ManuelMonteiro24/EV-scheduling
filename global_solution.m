@@ -6,7 +6,7 @@ N = 24;
 %EV's set (200 carros)
 M = 200;
 % others sets ???? 
-M_V2G = 200;
+M_V2G = 0;
 M_CHG = 200;
 
 %Electricity price model parameters (obtidos na seccao simulation settings)
@@ -26,10 +26,12 @@ pmax = 5; %unidades: 5kW
 %experiencias eles consideram isso, (obtido na seccao simulation settings)
 fe_ratio = 0.9; 
 
-%isto esta errado mas e para testar a matriz f
-for i = 1:N
-    for m = 1:M
-       f(m,i) = 0 ;
+%matriz f
+f = zeros(M,N);
+
+for m = 1:M
+    for i = (EV_info(m,1)+1):(EV_info(m,2))
+       f(m,i) = 1 ;
     end;
 end;   
 
@@ -37,12 +39,10 @@ end;
 
 cvx_begin quiet
 
-%tenho algumas duvidas nesta parte das variaveis, usamos z ou x, e a matriz
-%F? o que fazemos com ela??
+%meter tbm a variavel z???
 variable x(M,N);
 
-%Charging load at interval i?????? isto ? necessario??? s?o a variaveis y
-%(x e f) de qual o z vai depender
+%Charging load at interval i
 for i = 1:N
     var = 0;
     for m = 1:M
@@ -51,8 +51,7 @@ for i = 1:N
     y(i) = var
 end;
 
-%Total load at interval i????? isto ? necessario??? mesma pergunta que em
-%cima
+%Total load at interval i
 for i = 1:N
     z(i) = L_b(i) + y(i)
 end;
@@ -65,15 +64,7 @@ end;
 
 minimize(f_cost);
 
-%subject to
-
-%Constrain that secures that the values of the matrix F(M,N)
-%are 1 or 0 INACABADO
-%for i = 1:N
- %   for m = 1:M
-       %%%% f(m,i) = 0 | 1; boolean ACABAR
-%    end;
-%end;    
+%subject to   
 
 %Constrain that secures that the total load in an interval
 %is equal to the base load in that interval plus the sum of
@@ -82,7 +73,7 @@ minimize(f_cost);
 for i = 1:N
     var = 0;
     for m = 1:M
-        var = x(m,i)*f(m,i) + var;
+        var = (x(m,i)*f(m,i)) + var;
     end;
     z(i) = L_b(i) + var;
 end;
@@ -95,7 +86,7 @@ for m = 1:M
     for i = 1:N %confirmar a ordem destes 2 primeiros for. e indiferente???
         var = 0;
         for k = EV_info(m,1):i %confirmar isto??
-        var = (x(m,k)*f(m,k)*tau) + var;   
+            var = ((x(m,k)*f(m,k))*tau) + var;   
         end;
         EV_info(m,3)+ var <= bat_cap;
         EV_info(m,3)+ var >= 0;
@@ -108,32 +99,32 @@ end;
 for m = 1:M
     var = 0;
     for i = 1:N
-        var = (x(m,i)*f(m,i)*tau) + var;
+        var = ((x(m,i)*f(m,i))*tau) + var;
     end;    
     (EV_info(m,3) + var) >= (fe_ratio*bat_cap);
 end; 
 
 %Constrain that secures that the charging power of a charging only vehicle
 %isnt lower than zero or higher that the maximum charging power
-
-for m = 1:M %????? APENAS VECICULOS DO SET CHG
-    for i = 1:N 
-        x(m,i) <= pmax;
-        x(m,i) >= 0;
+if M_CHG > 0 
+    for m = 1:M_CHG
+        for i = 1:N 
+            x(m,i) <= pmax;
+            x(m,i) >= 0;
+        end;
     end;
 end;
-
 %Constrain that secures that the charging power of a vehicle to grig type of
 %EV isnt lower than the minimun charging power or higher than the maximum 
 %charging power
-
-for m = 1:M %????? APENAS VECICULOS DO SET V2G
-    for i = 1:N  
-        x(m,i) <= pmax;
-        x(m,i) >= (-pmax);
+if M_V2G > 0 
+    for m = 1:M_V2G
+        for i = 1:N  
+            x(m,i) <= pmax;
+            x(m,i) >= (-pmax);
+        end;
     end;
 end;
-
 cvx_end;
 
 %simulation
