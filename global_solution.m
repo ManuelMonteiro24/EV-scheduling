@@ -20,11 +20,18 @@ tau = 1; %unidades : 1 hora
 bat_cap = 16; %unidades : 16kWh 
 
 %Maximum charging power (obtido na seccao simulation settings)
-pmax = 5: %unidades: 5kW
+pmax = 5; %unidades: 5kW
 
 %Final energy ratio required ???? confirmar????? pelo menos para as
 %experiencias eles consideram isso, (obtido na seccao simulation settings)
 fe_ratio = 0.9; 
+
+%isto esta errado mas e para testar a matriz f
+for i = 1:N
+    for m = 1:M
+       f(m,i) = 0 ;
+    end;
+end;   
 
 %Solve the optimization problem
 
@@ -32,14 +39,14 @@ cvx_begin quiet
 
 %tenho algumas duvidas nesta parte das variaveis, usamos z ou x, e a matriz
 %F? o que fazemos com ela??
-variables x(M,N) f(M,N) ;
+variable x(M,N);
 
 %Charging load at interval i?????? isto ? necessario??? s?o a variaveis y
 %(x e f) de qual o z vai depender
 for i = 1:N
     var = 0;
     for m = 1:M
-        var = x(m,i)*f(m,i) + var;
+        var = ((x(m,i))*(f(m,i))) + var;
     end;
     y(i) = var
 end;
@@ -62,11 +69,11 @@ minimize(f_cost);
 
 %Constrain that secures that the values of the matrix F(M,N)
 %are 1 or 0 INACABADO
-for i = 1:N
-    for m = 1:M
+%for i = 1:N
+ %   for m = 1:M
        %%%% f(m,i) = 0 | 1; boolean ACABAR
-    end;
-end;    
+%    end;
+%end;    
 
 %Constrain that secures that the total load in an interval
 %is equal to the base load in that interval plus the sum of
