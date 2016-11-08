@@ -1,4 +1,4 @@
-%variables
+%information variables
 
 %Interval set (24 intervalos)
 N = 24;
@@ -39,26 +39,20 @@ end;
 
 cvx_begin quiet
 
-%meter tbm a variavel z???
 variable x(M,N);
 
 %Charging load at interval i
 for i = 1:N
     var = 0;
     for m = 1:M
-        var = ((x(m,i))*(f(m,i))) + var;
+        var = (((x(m,i))*(f(m,i))) + var);
     end;
-    y(i) = var
-end;
-
-%Total load at interval i
-for i = 1:N
-    z(i) = L_b(i) + y(i)
+    z(i) = L_b(i) + var; %var = y(i)
 end;
 
 %Cost function
 f_cost = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
-for i = 2:N
+for i = 1:N
     f_cost = f_cost + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
 end;
 
@@ -75,7 +69,7 @@ for i = 1:N
     for m = 1:M
         var = (x(m,i)*f(m,i)) + var;
     end;
-    z(i) = L_b(i) + var;
+    z(i) == L_b(i) + var;
 end;
 
 %Constrain that secures that the energy of a vehicle at the end of an
