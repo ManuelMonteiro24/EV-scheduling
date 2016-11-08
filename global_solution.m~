@@ -39,7 +39,19 @@ end;
 
 cvx_begin quiet
 
-variables x(M,N) z(N);
+variable z(N);
+
+
+
+%Cost function
+f_cost = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
+for i = 1:N
+    f_cost = f_cost + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
+end;
+
+minimize(f_cost);
+
+%subject to   
 
 %Charging load at interval i
 for i = 1:N
@@ -49,16 +61,6 @@ for i = 1:N
     end;
     z(i) == L_b(i) + var; %var = y(i)
 end;
-
-%Cost function
-f_cost = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
-for i = 2:N
-    f_cost = f_cost + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
-end;
-
-minimize(f_cost);
-
-%subject to   
 
 %Constrain that secures that the total load in an interval
 %is equal to the base load in that interval plus the sum of
