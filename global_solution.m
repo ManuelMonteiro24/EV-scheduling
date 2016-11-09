@@ -122,3 +122,19 @@ end;
 cvx_end;
 
 %simulation
+
+%sum of all x(m,i) in one interval
+for i = 1:N
+    var = 0;
+    for m = 1:M
+    var = x(m,i) + var;    
+    end;
+    x_i(i) = var;
+end;
+
+%plot solution
+figure(1); clf; 
+ subplot(1,2,1); stem(x_i,'LineWidth',5);
+ title('Xi');
+ subplot(1,2,2); stem(z,'LineWidth',5);
+ title('zi');

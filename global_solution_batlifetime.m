@@ -11,16 +11,16 @@ M_CHG = 200;
 
 %Electricity price model parameters (obtidos na seccao simulation settings)
 k0 = 10^-4; % unidades: C$/kWh
-k1 = 1.2*(10^-4); %unidades: C$/kWh/kW
+k1 = 1.2*(10^-4); %unities: C$/kWh/kW
 
 %Length of an interval (obtido no sistem model da solucao global)
-tau = 1; %unidades : 1 hora
+tau = 1; %unities: 1 hora
 
 %Battery capacity (obtida na seccao simulation settings)
-bat_cap = 16; %unidades : 16kWh 
+bat_cap = 16; %unities: 16kWh 
 
 %Maximum charging power (obtido na seccao simulation settings)
-pmax = 5; %unidades: 5kW
+pmax = 5; %unities: 5kW
 
 %Final energy ratio required ???? confirmar????? pelo menos para as
 %experiencias eles consideram isso, (obtido na seccao simulation settings)
@@ -31,9 +31,15 @@ f = zeros(M,N);
 
 for m = 1:M
     for i = (EV_info(m,1)+1):(EV_info(m,2))
-       f(m,i) = 1 ;
+       f(m,i) = 1;
     end;
-end;   
+end;
+
+% beta model parameter
+b = 5*(10^-4); %unities: C$/kWh^2
+
+%niu model parameter
+niu = (10^-3); %unities: C$/kWh^2
 
 %Solve the optimization problem
 
@@ -51,12 +57,26 @@ for i = 1:N
 end;
 
 %Cost function
-f_cost = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
+f_cost_1 = (k0*z(1)+(k1/2)*(z(1)^2)) - (k0*L_b(1)+(k1/2)*(L_b(1)^2));
 for i = 2:N
-    f_cost = f_cost + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
+    f_cost_1 = f_cost_1 + (k0*z(i)+(k1/2)*(z(i)^2)) - (k0*L_b(i)+(k1/2)*(L_b(i)^2));
 end;
 
-minimize(f_cost);
+f_cost_2 = 0;
+for m = 1:M
+    for i = 1:N
+        f_cost_2 = b*((x(m,i))^2) + f_cost_2;
+    end;
+end;
+
+f_cost_3 = 0;
+for m = 1:M
+    for i = 2:N
+        f_cost_3 = (niu*(x(m,i) - x(m,(i-1)))^2) + f_cost_3;
+    end;
+end;
+
+minimize(f_cost_1 + f_cost_2 + f_cost_3);
 
 %subject to   
 
@@ -122,14 +142,19 @@ end;
 cvx_end;
 
 %simulation
+
+%sum of all x(m,i) in one interval
 for i = 1:N
     var = 0;
     for m = 1:M
-    va    
+    var = x(m,i) + var;    
     end;
+    x_i(i) = var;
 end;
-figure(1); clf; % plot solution
- subplot(1,2,1); stem(x,'LineWidth',5);
- title('Xmi');
+
+%plot solution
+figure(1); clf; 
+ subplot(1,2,1); stem(x_i,'LineWidth',5);
+ title('Xi');
  subplot(1,2,2); stem(z,'LineWidth',5);
  title('zi');
