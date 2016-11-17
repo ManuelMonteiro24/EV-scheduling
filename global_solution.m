@@ -1,35 +1,9 @@
-%% Optimal Scheduling for Charging and Discharging of Electric Vehicles
-%
-% Authors: Manuel Monteiro, Leonor Fermoselle, Miguel Paulino, In?s
-% Peixoto
-%
-% Date: xx/12/2016
-%%
-%Variable initialization
+%% Part I - Global Scheduling solution
+%Solve the optimization problem
 
-load('EV_data.mat');
+function [f_cost, y, z, E, x] = global_solution(EV_info, L_b, N, M_V2G, M_CHG, k0, k1, tau, bat_cap, pmax, fe_ratio)
 
-N = 24;         %Interval set
-M = 200;        %EV's set
-M_V2G = 200;      %Vehicle-to-grid set
-M_CHG = 0;    %Charging-only EV set
-
-%Electricity price model parameters (obtidos na seccao simulation settings)
-k0 = 10^-4; % units: [C$/kWh]
-k1 = 1.2*(10^-4); %units: [C$/kWh/kW]
-
-%Length of an interval (obtido no sistem model da solucao global)
-tau = 1; %units: [hour]
-
-%Battery capacity (obtida na seccao simulation settings )
-bat_cap = 16; %units: [kWh] 
-
-%Maximum charging power (obtido na seccao simulation settings)
-pmax = 5; %units: [kW]
-
-%Final energy ratio required ???? confirmar????? pelo menos para as
-%experiencias eles consideram isso, (obtido na seccao simulation settings)
-fe_ratio = 0.9; 
+M = M_V2G + M_CHG;
 
 %defining matrix f (charging-interval matrix)
 f = zeros(M,N);
@@ -38,10 +12,7 @@ for m = 1:M
     for i = (EV_info(m,1)):(EV_info(m,2))
        f(m,i) = 1 ;
     end;
-end;   
-
-%% Part I - Global Scheduling solution
-%Solve the optimization problem
+end;
 
 cvx_begin quiet
 
@@ -118,68 +89,4 @@ if M_V2G > 0
 end;
 
 cvx_end;
-
-%% Part I: Simulations
-
-%sum of all x(m,i) in one interval
-%for i = 1:N
- %   var = 0;
- %   for m = 1:M
- %   var = x(m,i) + var;    
- %   end;
- %   x_i(i) = var;
-%end;
-
-%plot solution
-%figure(1); clf; 
-% subplot(1,2,1); stem(x_i,'LineWidth',5);
-% title('Xi');
-% subplot(1,2,2); stem(z,'LineWidth',5);
-% title('zi');
-
- %Charging load and Total load simulation
-figure(2);
- plot(y, 'b');      %Globally optimal scheme
- axis([0 24 -200 400]);
- ylabel('Charging load [kW]');
- xlabel('Time [h]');
- legend('Globally optimal scheme');
- 
-figure(3);
- plot(z, 'b');      %Globally optimal scheme
- hold on;
- plot(L_b, 'r');    %Base load
- axis([0 24 800 1600]);
- ylabel('Total load [kW]');
- xlabel('Time [h]');
- legend('Globally optimal scheme','Base load');
- 
- %Energy and Charging power of EV 19
-figure(4);
- plot(E(19,:), 'b');    %Globally optimal scheme
- axis([0 24 0 15]);
- ylabel('Energy of EV 19 [kWh]');
- xlabel('Time [h]');
- legend('Globally optimal scheme');
- 
-figure(5);
- bar(x(19,:));  %Globally optimal scheme
- axis([0 25 -2 6]);
- ylabel('Charging power of EV 19 [kW]');
- xlabel('Time [h]');
- legend('Globally optimal scheme');
- 
- %Charging only ratio simulation
-%figure(6);
- %axis([0 1 230 270]);
- %ylabel('Total cost [C$]');
- %xlabel('Charging-only ratio');
- 
- 
- %% Part II - ???
- 
- 
- 
- 
- 
- 
+end 
